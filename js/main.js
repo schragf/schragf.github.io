@@ -32,17 +32,17 @@ document.querySelector('#threejs_canvas').appendChild(renderer.domElement);
 var f_size = "85px";
 if (window.innerWidth < 375) {
     f_size = "30px";
-    document.getElementById("logo").style.width = "15%";
-    document.getElementById("contact").style.width = "15%";
+    // document.getElementById("logo").style.width = "15%";
+    // document.getElementById("contact").style.width = "15%";
 } else if (window.innerWidth < 600) {
     f_size = "35px";
-    document.getElementById("logo").style.width = "15%";
-    document.getElementById("contact").style.width = "15%";
+    // document.getElementById("logo").style.width = "15%";
+    // document.getElementById("contact").style.width = "15%";
 } else if (window.innerWidth < 1000) f_size = "60px";
 else if (window.innerWidth < 1200) f_size = "70px";
 else if (window.innerWidth < 1400) f_size = "80px";
 let enable_scroll = false;
-document.getElementById("intro-text").style.fontSize = f_size;
+// document.getElementById("intro-text").style.fontSize = f_size;
 
 
 
@@ -88,9 +88,9 @@ var camera = new THREE.PerspectiveCamera(Math.atan( Math.tan( hFOV * Math.PI / 3
 
 
 const controls = new OrbitControls(camera, document.querySelector('#threejs_canvas'));
-controls.enablePan = false;
-controls.enableZoom = true;
-camera.position.set(0, 0, 50);
+controls.enablePan = true;
+controls.enableZoom = false;
+camera.position.set(0, 0, 25);
 controls.enableDamping = true;
 controls.update();
 
@@ -114,33 +114,34 @@ console.log('Start: Camera.fov ' + camera.fov);
 // -------EVENT LISTENENER
 
 //ENTER / EXIT START SCREEN
-document.querySelector('#intro-text').addEventListener('click', onClick);
-function onClick() {
-    if (!(document.getElementById("intro-text").style.visibility == "hidden")) {
-        document.getElementById("intro-text").style.visibility="hidden";
-        document.getElementById("overlay").style.background="transparent";
-        document.getElementById("logo").style.visibility="visible";
-        document.getElementById("contact").style.visibility="visible";
-        document.getElementById("scroll-1").style.visibility="visible";
-        document.getElementById("scroll-2").style.visibility="visible";
 
-     } 
+// document.querySelector('#intro-text').addEventListener('click', onClick);
+// function onClick() {
+//     if (!(document.getElementById("intro-text").style.visibility == "hidden")) {
+//         document.getElementById("intro-text").style.visibility="hidden";
+//         document.getElementById("overlay").style.background="transparent";
+//         document.getElementById("logo").style.visibility="visible";
+//         document.getElementById("contact").style.visibility="visible";
+//         document.getElementById("scroll-1").style.visibility="visible";
+//         document.getElementById("scroll-2").style.visibility="visible";
 
-}
+//      } 
+
+// }
 // OVERLAY JS
-document.querySelector('#logo').addEventListener('click', function(e) {
+// document.querySelector('#logo').addEventListener('click', function(e) {
     
-    document.getElementById("intro-text").style.visibility="visible";
-    document.getElementById("overlay").style.background="rgba(0,0,0,0.6)";
-    document.getElementById("logo").style.visibility="hidden";
-    document.getElementById("contact").style.visibility="hidden";
-    // enable_scroll = false;    
-    // test = true;
-})
-document.querySelector('#scroll').addEventListener('click', function(e) {
-    camera_transition.transition = true;
-    controls.enabled = false;
-});
+//     document.getElementById("intro-text").style.visibility="visible";
+//     document.getElementById("overlay").style.background="rgba(0,0,0,0.6)";
+//     document.getElementById("logo").style.visibility="hidden";
+//     document.getElementById("contact").style.visibility="hidden";
+//     // enable_scroll = false;    
+//     // test = true;
+// })
+// document.querySelector('#scroll').addEventListener('click', function(e) {
+//     camera_transition.transition = true;
+//     controls.enabled = false;
+// });
 
 //RESIZING WITH LINEAR INTERPOLATION
 window.addEventListener('resize', onResize);
@@ -219,39 +220,44 @@ light.shadow.mapSize.height = 1024*4;
 
 // runter scrollen oder besser knopf drücken aber immmernoch in der selben szene sein aber mittelpunkt ändert zu neuem object 
 
-
+var letterModels = [];
 const loader = new GLTFLoader();
 const draco = new DRACOLoader();
-// draco.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
-// loader.setDRACOLoader(draco);
-// loader.load('../models/text_centered.glb', (gltf) => {
-//     // for (var i = 0; i < gltf.scene.children.length; i++) {
-//     //     var model = gltf.scene.children[i];
-//     //     model.position.x += 10;
-//     // }
-//     scene.add(gltf.scene);
-// });
-
-
-
-loader.load('../models/website.glb', (gltf) => {
-    scene.add(gltf.scene);
-});
-
-
-
-
-
-
+draco.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+loader.setDRACOLoader(draco);
+var letters = ["D", "I", "O", "N", "Y", "S"]
+for (let i = 0; i < letters.length; i++) {
+    loader.load(`../models/website_${letters[i]}.glb`, (gltf) => {
+        var model = gltf.scene.children[0];
+        // model.material = new THREE.MeshBasicMaterial({color: 0xAAAAAA, metalness: 0.5, roughness: 0.5});
+        model.position.y = -i*1.01+5;
+        model.position.x = i*2-10;
+        model.rotationSpeedZ = Math.random() * 0.05 - 0.025
+        scene.add(model);
+        letterModels.push(model);
+    });
+}
+var letters = ["S_2", "C", "H", "R", "A", "G"]
+for (let i = 0; i < letters.length; i++) {
+    loader.load(`../models/website_${letters[i]}.glb`, (gltf) => {
+        var model = gltf.scene.children[0];
+        // model.material = new THREE.MeshBasicMaterial({color: 0xAAAAAA, metalness: 0.5, roughness: 0.5});
+        model.position.y = -i*1.01-3;
+        model.position.x = i*2;
+        model.rotationSpeedZ = -(Math.random() * 0.05 - 0.025);
+        scene.add(model);
+        letterModels.push(model);
+    });
+}
 
 
 // --------END LOAD MODELS
 
 // --------COMPOSITING
 
-//var composer = new EffectComposer(renderer);
-//composer.addPass(new RenderPass(scene, camera));
-//composer.addPass(new UnrealBloomPass({x: window.innerWidth, y: window.innerHeight}, 5, 5.0, 0.7));
+// var composer = new EffectComposer(renderer);
+// composer.addPass(new RenderPass(scene, camera));
+// composer.addPass(new UnrealBloomPass({x: window.innerWidth, y: window.innerHeight}, 5, 5.0, 0.7));
 
 // --------END COMPOSITING
 
@@ -269,7 +275,9 @@ var render = function() {
 
     }
     controls.update();
-
+    letterModels.forEach((model) => {
+        model.rotation.z += model.rotationSpeedZ;
+    })
     renderer.render(scene, camera);
     
 }
