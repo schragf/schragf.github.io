@@ -89,7 +89,7 @@ var camera = new THREE.PerspectiveCamera(Math.atan( Math.tan( hFOV * Math.PI / 3
 
 const controls = new OrbitControls(camera, document.querySelector('#threejs_canvas'));
 controls.enablePan = true;
-controls.enableZoom = false;
+controls.enableZoom = true;
 camera.position.set(0, 0, 25);
 controls.enableDamping = true;
 controls.update();
@@ -223,27 +223,37 @@ light.shadow.mapSize.height = 1024*4;
 var letterModels = [];
 const loader = new GLTFLoader();
 const draco = new DRACOLoader();
+const textureLoader = new THREE.TextureLoader();
 draco.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
 loader.setDRACOLoader(draco);
-var letters = ["D", "I", "O", "N", "Y", "S"]
-for (let i = 0; i < letters.length; i++) {
-    loader.load(`../models/website_${letters[i]}.glb`, (gltf) => {
-        var model = gltf.scene.children[0];
-        // model.material = new THREE.MeshBasicMaterial({color: 0xAAAAAA, metalness: 0.5, roughness: 0.5});
-        model.position.y = -i*1.01+5;
-        model.position.x = i*2-10;
-        model.rotationSpeedZ = Math.random() * 0.05 - 0.025
-        scene.add(model);
-        letterModels.push(model);
+
+var letters_vor = ["D", "I", "O", "N", "Y", "S"];
+for (let i = 0; i < letters_vor.length; i++) {
+    textureLoader.load(`../models/baked_textures/${letters_vor[i]}.png`, (texture) => {
+        loader.load(`../models/website_${letters_vor[i]}.glb`, (gltf) => {
+            const model = gltf.scene.children[0];
+            const material = new THREE.MeshStandardMaterial({ map: texture });
+            model.material = material;
+            model.position.y = -i*1.01+5;
+            model.position.x = i*2-15;
+            model.initialX = model.position.x;
+            model.initialY = model.position.y;
+            model.rotationSpeedZ = Math.random() * 0.05 - 0.025;
+            scene.add(model);
+            letterModels.push(model);
+        });
     });
 }
-var letters = ["S_2", "C", "H", "R", "A", "G"]
+
+var letters = ["S_2", "C", "H", "R", "A", "G"];
 for (let i = 0; i < letters.length; i++) {
     loader.load(`../models/website_${letters[i]}.glb`, (gltf) => {
         var model = gltf.scene.children[0];
         // model.material = new THREE.MeshBasicMaterial({color: 0xAAAAAA, metalness: 0.5, roughness: 0.5});
-        model.position.y = -i*1.01-3;
-        model.position.x = i*2;
+        model.position.y = -i*1.01-2;
+        model.position.x = i*2+0.5;
+        model.initialX = model.position.x;
+        model.initialY = model.position.y;
         model.rotationSpeedZ = -(Math.random() * 0.05 - 0.025);
         scene.add(model);
         letterModels.push(model);
@@ -262,9 +272,11 @@ for (let i = 0; i < letters.length; i++) {
 // --------END COMPOSITING
 
 
+var angle = 0;
 
 var render = function() {
     requestAnimationFrame(render);
+    angle += 0.004;
     if (camera_transition.transition && camera.position.y > camera_transition.next.y) {
         console.log(camera.position.y);
         camera.position.y -= 0.1;
@@ -277,7 +289,11 @@ var render = function() {
     controls.update();
     letterModels.forEach((model) => {
         model.rotation.z += model.rotationSpeedZ;
+        model.position.x = model.initialX * Math.cos(angle) - model.initialY * Math.sin(angle);
+        model.position.y = model.initialY * Math.sin(angle) + model.initialY * Math.cos(angle);
+
     })
+   
     renderer.render(scene, camera);
     
 }
@@ -296,3 +312,42 @@ if (window.matchMedia("(orientation: landscape)").matches) {
  }
 
  
+// Background color transition
+var transitionDuration = 5000; 
+var pauseDuration = 10000;
+var cycleDuration = transitionDuration + 2 * pauseDuration; 
+var startTime = Date.now(); 
+
+function updateColors() {
+    var now = Date.now();
+    var elapsedTime = now - startTime;
+    var cycleTime = elapsedTime % cycleDuration; 
+
+    var fraction;
+
+    if (cycleTime < pauseDuration) {
+        fraction = 0;
+    } else if (cycleTime < transitionDuration + pauseDuration) {
+        fraction = (cycleTime - pauseDuration) / transitionDuration;
+    } else if (cycleTime < transitionDuration + 2 * pauseDuration) {
+        fraction = 1;
+    } else {
+        fraction = (cycleTime - transitionDuration - 2 * pauseDuration) / transitionDuration;
+        fraction = 1 - fraction; 
+    }
+
+    var smoothFraction = Math.sin((fraction * Math.PI) / 2); 
+    var backgroundColorValue = Math.round(255 * smoothFraction);
+    var letterColorValue = 255 - backgroundColorValue;
+
+    renderer.setClearColor(`rgb(${backgroundColorValue}, ${backgroundColorValue}, ${backgroundColorValue})`);
+
+    letterModels.forEach((model) => {
+        model.material.color.set(`rgb(${letterColorValue}, ${letterColorValue}, ${letterColorValue})`);
+    });
+
+    requestAnimationFrame(updateColors);
+}
+
+updateColors();
+
