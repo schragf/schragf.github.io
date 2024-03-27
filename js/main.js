@@ -229,11 +229,8 @@ loader.setDRACOLoader(draco);
 
 var letters_vor = ["D", "I", "O", "N", "Y", "S"];
 for (let i = 0; i < letters_vor.length; i++) {
-    textureLoader.load(`../models/baked_textures/${letters_vor[i]}.png`, (texture) => {
         loader.load(`../models/website_${letters_vor[i]}.glb`, (gltf) => {
             const model = gltf.scene.children[0];
-            const material = new THREE.MeshStandardMaterial({ map: texture });
-            model.material = material;
             model.position.y = -i*1.01+5;
             model.position.x = i*2-15;
             model.initialX = model.position.x;
@@ -242,14 +239,12 @@ for (let i = 0; i < letters_vor.length; i++) {
             scene.add(model);
             letterModels.push(model);
         });
-    });
 }
 
 var letters = ["S_2", "C", "H", "R", "A", "G"];
 for (let i = 0; i < letters.length; i++) {
     loader.load(`../models/website_${letters[i]}.glb`, (gltf) => {
         var model = gltf.scene.children[0];
-        // model.material = new THREE.MeshBasicMaterial({color: 0xAAAAAA, metalness: 0.5, roughness: 0.5});
         model.position.y = -i*1.01-2;
         model.position.x = i*2+0.5;
         model.initialX = model.position.x;
@@ -313,7 +308,7 @@ if (window.matchMedia("(orientation: landscape)").matches) {
 
  
 // Background color transition
-var transitionDuration = 5000; 
+var transitionDuration = 10000; 
 var pauseDuration = 10000;
 var cycleDuration = transitionDuration + 2 * pauseDuration; 
 var startTime = Date.now(); 
