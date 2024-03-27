@@ -193,7 +193,7 @@ var light = new THREE.DirectionalLight(0xFFFFFF,0.5);
 
 light.castShadow = true;
 scene.add( light );
-const lightam = new THREE.AmbientLight( 0xFFFFFF, 0.5); // soft white light
+const lightam = new THREE.AmbientLight( 0xFFFFFF, 0.5); 
 scene.add(lightam);
 
 light.position.set( 
@@ -271,7 +271,7 @@ var angle = 0;
 
 var render = function() {
     requestAnimationFrame(render);
-    angle += 0.004;
+    angle += 0.005;
     if (camera_transition.transition && camera.position.y > camera_transition.next.y) {
         console.log(camera.position.y);
         camera.position.y -= 0.1;
@@ -283,7 +283,7 @@ var render = function() {
     }
     controls.update();
     letterModels.forEach((model) => {
-        model.rotation.z += model.rotationSpeedZ;
+        // model.rotation.z += model.rotationSpeedZ;
         model.position.x = model.initialX * Math.cos(angle) - model.initialY * Math.sin(angle);
         model.position.y = model.initialY * Math.sin(angle) + model.initialY * Math.cos(angle);
 
@@ -345,4 +345,5 @@ function updateColors() {
 }
 
 updateColors();
+
 
