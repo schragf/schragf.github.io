@@ -27,46 +27,6 @@ document.querySelector('#threejs_canvas').appendChild(renderer.domElement);
 //document.body.appendChild(renderer.domElement);
 
 
-
-// ------STARTUP JAVASCRIPT
-var f_size = "85px";
-if (window.innerWidth < 375) {
-    f_size = "30px";
-    // document.getElementById("logo").style.width = "15%";
-    // document.getElementById("contact").style.width = "15%";
-} else if (window.innerWidth < 600) {
-    f_size = "35px";
-    // document.getElementById("logo").style.width = "15%";
-    // document.getElementById("contact").style.width = "15%";
-} else if (window.innerWidth < 1000) f_size = "60px";
-else if (window.innerWidth < 1200) f_size = "70px";
-else if (window.innerWidth < 1400) f_size = "80px";
-let enable_scroll = false;
-// document.getElementById("intro-text").style.fontSize = f_size;
-
-
-
-
-
-
-
-// ------END STARTUP JAVASCRIPT
-
-
-// ------CAMERA SETUP
-
-/*
-INTERPOLATION CAMERA FOV
-
-1920 -> 40 (Start)
-
-375 -> (Iphone X)
-320 -> 106 (Stop neu - Iphone 5)
-
-linear interpolation: 75 + (68-75) / (1920 - 320) * (window.innerWidth - 320) - horizontal field of view
-
-
-*/
 var hFOV = 75 + (68-75) / (1920 - 320) * (window.innerWidth - 320); // desired horizontal fov, in degrees
 
 var camera = new THREE.PerspectiveCamera(Math.atan( Math.tan( hFOV * Math.PI / 360 ) / (window.innerWidth/window.innerHeight) ) * 360 / Math.PI, window.innerWidth/window.innerHeight, 0.1, 1000);
@@ -90,7 +50,7 @@ var camera = new THREE.PerspectiveCamera(Math.atan( Math.tan( hFOV * Math.PI / 3
 const controls = new OrbitControls(camera, document.querySelector('#threejs_canvas'));
 controls.enablePan = true;
 controls.enableZoom = true;
-camera.position.set(0, 0, 25);
+camera.position.set(0, 0, 1);
 controls.enableDamping = true;
 controls.update();
 
@@ -272,15 +232,6 @@ var angle = 0;
 var render = function() {
     requestAnimationFrame(render);
     angle += 0.005;
-    if (camera_transition.transition && camera.position.y > camera_transition.next.y) {
-        console.log(camera.position.y);
-        camera.position.y -= 0.1;
-        controls.target.set(0, camera.position.y, 0);
-    } else {
-        camera_transition.transition = false;
-        controls.enabled = true;
-
-    }
     controls.update();
     letterModels.forEach((model) => {
         // model.rotation.z += model.rotationSpeedZ;
@@ -288,7 +239,10 @@ var render = function() {
         model.position.y = model.initialY * Math.sin(angle) + model.initialY * Math.cos(angle);
 
     })
-   
+    if (camera.position.z < 25) {
+        console.log(camera.position)
+        camera.position.z += 0.05;
+    }
     renderer.render(scene, camera);
     
 }
