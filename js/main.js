@@ -177,7 +177,7 @@ var render = function() {
     angle += 0.005;
     controls.update();
     letterModels.forEach((model) => {
-        model.rotation.z += model.rotationSpeedZ;
+        // model.rotation.z += model.rotationSpeedZ;
         model.position.x = model.initialX * Math.cos(angle) - model.initialY * Math.sin(angle);
         model.position.y = model.initialY * Math.sin(angle) + model.initialY * Math.cos(angle);
 
