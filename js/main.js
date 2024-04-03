@@ -105,7 +105,7 @@ light_2.castShadow = true;
 light.castShadow = true;
 light.position.set(-15, 5, 50);
 light_2.position.set(15, -5, 50);
-const shadow_factor = 10;
+const shadow_factor = 2;
 light.shadow.bias = -0.000001;
 light.shadow.mapSize.width = 1024*shadow_factor;
 light.shadow.mapSize.height = 1024*shadow_factor;
