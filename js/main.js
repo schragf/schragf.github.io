@@ -17,7 +17,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.5;
+renderer.toneMappingExposure = 0.8;
 renderer.outputEncoding = THREE.sRGBEncoding;
 
 document.querySelector('#threejs_canvas').appendChild(renderer.domElement);
@@ -28,8 +28,8 @@ var camera = new THREE.PerspectiveCamera(Math.atan( Math.tan( hFOV * Math.PI / 3
 
 const controls = new OrbitControls(camera, document.querySelector('#threejs_canvas'));
 controls.enablePan = false;
-controls.enableZoom = true;
-camera.position.set(0, 0, 5);
+controls.enableZoom = false;
+camera.position.set(0, 0, 15);
 controls.enableDamping = true;
 controls.dampingFactor = 0.005;
 const degreesToRadians = degrees => degrees * (Math.PI / 180);
@@ -103,9 +103,9 @@ var light = new THREE.DirectionalLight(0xFFE8C7, 10);
 var light_2 = new THREE.DirectionalLight(0xC7E0FF, 10);
 light_2.castShadow = true;
 light.castShadow = true;
-light.position.set(-10, 5, 20);
-light_2.position.set(10, -5, 20);
-const shadow_factor = 1;
+light.position.set(-15, 5, 50);
+light_2.position.set(15, -5, 50);
+const shadow_factor = 10;
 light.shadow.bias = -0.000001;
 light.shadow.mapSize.width = 1024*shadow_factor;
 light.shadow.mapSize.height = 1024*shadow_factor;
@@ -142,7 +142,7 @@ for (let i = 0; i < letters_vor.length; i++) {
             const model = gltf.scene.children[0];
             model.position.x = -2*i;
             model.position.y = i+1.5;
-            model.position.z = i*3-10;
+            model.position.z = i-3;
             model.initialX = model.position.x;
             model.initialY = model.position.y;
             model.rotationSpeedZ = -(Math.random() * 0.005);
@@ -163,7 +163,7 @@ for (let i = 0; i < letters.length; i++) {
         var model = gltf.scene.children[0];
         model.position.x = i*2;
         model.position.y = -i-1.5;
-        model.position.z = i*3-10;
+        model.position.z = i-3;
         model.initialX = model.position.x;
         model.initialY = model.position.y;
         model.rotationSpeedZ = -(Math.random() * 0.005);
@@ -194,24 +194,44 @@ for (let i = 0; i < letters.length; i++) {
 
 
 var angle = 0;
-var camera_max = 20;
+var light_angle = 1;
+var pos_y = false;
 var render = function() {
     requestAnimationFrame(render);
-    angle += 0.006;
+    angle += 0.003;
+    light_angle += 0.003;
     controls.update();
+    let maxDistance = 0;
+    var scalingFactor = 2;
+    var constant_distance = 0;
+    if (window.innerWidth <= 500) {
+        scalingFactor = 1;
+        constant_distance = 1;
+        pos_y = true
+    } else {
+        scalingFactor = 3;
+        constant_distance = 1;
+    } 
     [...DionysModels, ...SchragModels, ...StudioModels].forEach((model) => {
-        // model.rotation.z += model.rotationSpeedZ;
         model.position.x = model.initialX * Math.cos(angle) - model.initialY * Math.sin(angle);
         model.position.y = model.initialY * Math.sin(angle) + model.initialY * Math.cos(angle);
+        if (pos_y) {
+            model.position.y = model.position.y*1.5;
+            model.position.x = model.position.x/1.5;
+        }
+        const distance = model.position.distanceTo(new THREE.Vector3(0,0, model.position.z));
+        if (distance > maxDistance) {
+            maxDistance = distance;
+        }
     });
-    if (window.innerWidth <= 500) {
-        camera_max = 20;
-    } else {
-        camera_max = 40;
-    } 
-    if (camera.position.z < camera_max) {
-        camera.position.z += 0.1;
-    }
+
+    const desiredCameraZ = Math.max(maxDistance * scalingFactor - constant_distance, 0);
+    const cameraTargetZ = THREE.MathUtils.lerp(camera.position.z, desiredCameraZ, 0.05); // Smooth transition factor
+    camera.position.z = cameraTargetZ;
+    light.position.z = -15 * Math.cos(light_angle) - 50*Math.sin(light_angle);
+    light.position.x = 50 * Math.sin(light_angle) -15 * Math.cos(light_angle);
+    light_2.position.x = -15 * Math.cos(light_angle) - 50*Math.sin(light_angle);
+    light_2.position.z = 50 * Math.sin(light_angle) -15 * Math.cos(light_angle);
     renderer.render(scene, camera);
     
 }
@@ -260,7 +280,7 @@ function updateColors() {
             white_to_black = true;
             if (roughness_count % 2 == 0) {
                 [...DionysModels, ...SchragModels, ...StudioModels].forEach((model) => {
-                    model.material.roughness = 0.8;
+                    model.material.roughness = 0.3;
                 });
             } else {
                 [...DionysModels, ...SchragModels, ...StudioModels].forEach((model) => {
@@ -295,3 +315,34 @@ function updateColors() {
 }
 
 updateColors();
+
+var wire_inactive = true;
+function handleWireframe() {
+    if (wire_inactive) {
+        console.log(event.button);
+        [...DionysModels, ...SchragModels, ...StudioModels].forEach((model) => {
+            model.material.wireframe = true;
+            model.material.wireframeLinewidth = 0.001;
+            wire_inactive = false;
+        });
+    } else {
+        [...DionysModels, ...SchragModels, ...StudioModels].forEach((model) => {
+            model.material.wireframe = false;
+            wire_inactive = true;
+        });
+    }
+};
+
+// Mouse click event
+renderer.domElement.addEventListener('click', (event) => {
+    if (event.button === 0) { // Left mouse button
+        handleWireframe();
+    }
+});
+
+// Touch event
+renderer.domElement.addEventListener('touchstart', (event) => {
+    if (event.touches.length === 1) { 
+        handleWireframe();
+    }
+});
