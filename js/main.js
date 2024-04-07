@@ -4,9 +4,9 @@ import {DRACOLoader} from 'https://cdn.jsdelivr.net/npm/three@0.118.1/examples/j
 
 import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/controls/OrbitControls.js';
 
-// import {EffectComposer} from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/postprocessing/EffectComposer.js';
-// import {RenderPass} from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/postprocessing/RenderPass.js';
-// import {UnrealBloomPass} from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/postprocessing/UnrealBloomPass.js';
+import {EffectComposer} from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/postprocessing/EffectComposer.js';
+import {RenderPass} from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 
 var scene = new THREE.Scene();
@@ -26,19 +26,19 @@ var hFOV = 75 + (68-75) / (1920 - 320) * (window.innerWidth - 320); // desired h
 
 var camera = new THREE.PerspectiveCamera(Math.atan( Math.tan( hFOV * Math.PI / 360 ) / (window.innerWidth/window.innerHeight) ) * 360 / Math.PI, window.innerWidth/window.innerHeight, 0.1, 1000);
 const controls = new OrbitControls(camera, document.querySelector('#threejs_canvas'));
-controls.enablePan = true;
-controls.enableZoom = true;
-camera.position.set(0, 0, 15);
+controls.enablePan = false;
+controls.enableZoom = false;
+camera.position.set(0, 0, 1000);
 camera.lookAt(0,0,0);
 controls.enableDamping = true;
-controls.dampingFactor = 0.005;
+controls.dampingFactor = 0.01;
 const degreesToRadians = degrees => degrees * (Math.PI / 180);
 
 
-controls.minAzimuthAngle = -degreesToRadians(7); 
-controls.maxAzimuthAngle = degreesToRadians(7); 
+controls.minAzimuthAngle = -degreesToRadians(10); 
+controls.maxAzimuthAngle = degreesToRadians(10); 
 
-const verticalLimit = degreesToRadians(5);
+const verticalLimit = degreesToRadians(10);
 
 const defaultPolar = Math.PI / 2;
 
@@ -67,6 +67,8 @@ function onResize() {
         hFOV = 75 + (68-75) / (1920 - 320) * (window.innerWidth - 320);
         camera.fov = Math.atan( Math.tan( hFOV * Math.PI / 360 ) / camera.aspect ) * 360 / Math.PI;
     }
+    // composer.setSize(window.innerWidth, window.innerHeight);
+    // bloomPass.setSize(window.innerWidth, window.innerHeight);
     camera.updateProjectionMatrix();
     console.log('Resize Window.innerWidth:' + window.innerWidth);
     console.log('Resize Camera.fov' + camera.fov);
@@ -108,7 +110,7 @@ light.position.set(light_initialX, 5, light_initialZ);
 light_2.position.set(-light_initialX, -5, light_initialZ);
 light.lookAt(0,0,0);
 light_2.lookAt(0,0,0);
-const shadow_factor = 1;
+const shadow_factor = 0.5;
 light.shadow.bias = -0.000001;
 light.shadow.mapSize.width = 1024*shadow_factor;
 light.shadow.mapSize.height = 1024*shadow_factor;
@@ -151,14 +153,18 @@ function loadModel(url, i, position) {
         loader.load(url, (gltf) => {
             const model = gltf.scene.children[0];
             if (position) {
-                model.position.x = -2*i;
-                model.position.y = i+1.5;
-                model.position.z = i-3;
+                model.position.x = -3*i-0.5;
+                model.position.y = i;
+                model.position.z = -i;
                 DionysModels.push(model);
             } else {
-                model.position.x = i*2;
-                model.position.y = -i-1.5;
-                model.position.z = i-3;
+                if (i === 0) {
+                    model.scale.x = -2;
+                    // model.scale.y = -1;
+                }
+                model.position.x = 3*i+0.5;
+                model.position.y = -i;
+                model.position.z = -i;
                 SchragModels.push(model);  
             }
             model.initialX = model.position.x;
@@ -168,9 +174,8 @@ function loadModel(url, i, position) {
                 metalness: 1, 
                 roughness: 0.3, 
             });  
-            model.receiveShadow = true;
-            model.castShadow = true;
-            console.log(i);
+            // model.receiveShadow = true;
+            // model.castShadow = true;
             scene.add(model);
             resolve(model);
         }, undefined, reject);
@@ -203,12 +208,12 @@ var render = function() {
         constant_distance = 1;
         pos_y = true
     } else {
-        scalingFactor = 3;
+        scalingFactor = 2;
         constant_distance = 1;
     } 
     allModels.forEach((model) => {
         model.position.x = model.initialX * Math.cos(angle) - model.initialY * Math.sin(angle);
-        model.position.y = model.initialY * Math.sin(angle) + model.initialY * Math.cos(angle);
+        model.position.y = model.initialY * Math.cos(angle) + model.initialY * Math.cos(angle);
         if (pos_y) {
             model.position.y = model.position.y*1.5;
             model.position.x = model.position.x/1.5;
@@ -224,7 +229,7 @@ var render = function() {
                 target_position.set(model.position.x, model.position.y, model.position.z);
             }
         });
-        const cameraTargetZ = THREE.MathUtils.lerp(camera.position.z, 4, 0.05); 
+        const cameraTargetZ = THREE.MathUtils.lerp(camera.position.z, 3, 0.05); 
         camera.position.z = cameraTargetZ;
     } else {
         const desiredCameraZ = Math.max(maxDistance * scalingFactor - constant_distance, 0);
@@ -243,19 +248,21 @@ var render = function() {
         controls.target.x = THREE.MathUtils.lerp(controls.target.x, target_position.x, 0.05);
         controls.target.y = THREE.MathUtils.lerp(controls.target.y, target_position.y, 0.05);
         controls.target.z = THREE.MathUtils.lerp(controls.target.z, target_position.z, 0.05);
-
+        camera.position.x = THREE.MathUtils.lerp(camera.position.x, 0, 0.005);;
+        camera.position.y = THREE.MathUtils.lerp(camera.position.y, 0, 0.005);;
         if (Math.abs(controls.target.x - target_position.x) < 0.01 && Math.abs(controls.target.y - target_position.y) < 0.01 && Math.abs(controls.target.z - target_position.z) < 0.01) {
             controls.target.set(target_position.x, target_position.y, target_position.z);
         }
 
         controls.update(); 
     }
-    renderer.render(scene, camera);   
+    renderer.render(scene, camera);  
+    // composer.render(); 
     
 }
  
 // Background color transition
-var transitionDuration = 10000; 
+var transitionDuration = 5000; 
 var pauseDuration = 5000;
 var startTime = Date.now(); 
 var fraction = 0;
@@ -345,6 +352,7 @@ renderer.domElement.addEventListener('touchstart', (event) => {
         focus_flag = false;
         shouldUpdateTarget = true;
         target_position = new THREE.Vector3(0,0,0);
+        light_angle_vel = 0.01;
     } else {
         // Calculate mouse position in normalized device coordinates (-1 to +1) for both components
         mouse.x = (event.clientX / window.innerWidth)* 2 - 1;
@@ -366,6 +374,7 @@ renderer.domElement.addEventListener('click', (event) => {
         focus_flag = false;
         shouldUpdateTarget = true;
         target_position = new THREE.Vector3(0,0,0);
+        light_angle_vel = 0.01;
     } else {
         // Calculate mouse position in normalized device coordinates (-1 to +1) for both components
         mouse.x = (event.clientX / window.innerWidth)* 2 - 1;
@@ -381,9 +390,10 @@ function checkForLetterClick() {
     if (!focus_flag) {
         const randomIndex = Math.floor(Math.random() * allModels.length);
         focus_flag = true;
-        focus_object = allModels[randomIndex];
-        // focus_object = new THREE.Vector3(0,0,0);
+        // focus_object = allModels[randomIndex];
+        focus_object = new THREE.Vector3(0,0,0);
         shouldUpdateTarget = true;
+        // light_angle = 4.2;
         }
 }
 
